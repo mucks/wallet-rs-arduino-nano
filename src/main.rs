@@ -36,6 +36,26 @@ fn main() -> ! {
 
     ufmt::uwriteln!(&mut serial, "Start").unwrap();
 
+    let index = 237;
+
+    let words_index = index % 64;
+    let word_index = (index % 32) as usize;
+    let words = index_to_words(words_index as usize);
+
+    let word_in_memory = words.load().as_bytes();
+
+    // let word = get_word!(237).as_bytes();
+    // let word2 = get_word!(238).as_bytes();
+
+    // let x = word.get(0);
+
+    // let mut bytes: [u8; 16] = [0; 16];
+    //bytes[0..5].copy_from_slice(word);
+
+    // let word2 = get_word!(238);
+
+    // let words = [word, word2];
+
     let t: u8 = 237;
 
     ufmt::uwriteln!(&mut serial, "words_index: {}", get_word!(t)).unwrap();

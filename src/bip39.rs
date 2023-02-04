@@ -18,7 +18,12 @@ macro_rules! get_word {
         let words_index = $index % 64;
         let word_index = ($index % 32) as usize;
         let words = index_to_words(words_index as usize);
-        words.load().split_whitespace().nth(word_index).unwrap()
+        words
+            .load()
+            .split_whitespace()
+            .nth(word_index)
+            .as_ref()
+            .unwrap()
     }};
 }
 
