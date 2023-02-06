@@ -28,7 +28,7 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
 fn main() -> ! {
     let dp = arduino_hal::Peripherals::take().unwrap();
     let mut adc = Adc::new(dp.ADC, Default::default());
-    let eeprom = eeprom::Eeprom::new(dp.EEPROM);
+    let mut eeprom = eeprom::Eeprom::new(dp.EEPROM);
     let pins = arduino_hal::pins!(dp);
     let mut serial = arduino_hal::default_serial!(dp, pins, 57600);
     let mut rng = Rng::new(
@@ -37,13 +37,19 @@ fn main() -> ! {
 
     ufmt::uwriteln!(&mut serial, "Start").unwrap();
 
+    //eeprom.read(0, &mut buffer).unwrap();
+    ufmt::uwriteln!(&mut serial, "Generating new mnemonic...").unwrap();
+
     let indices = rng.indices();
+    let mm = get_mnemonic(&indices);
+    print_mnnemonic(&mut serial, &mm);
 
-    print_mnnemonic(&mut serial, &indices);
+    //eeprom.write(0, &mm).unwrap();
 
-    for index in indices {
-        //ufmt::uwriteln!(&mut serial, "{:?}", eeprom.capacity()).unwrap();
-    }
+    // unsafe {
+    //     let s = core::str::from_utf8_unchecked(&mm);
+    //     ufmt::uwriteln!(&mut serial, "mnemonic: {}", s).unwrap();
+    // }
 
     loop {
         //ufmt::uwriteln!(&mut serial, "words_index: {}", get_word!(indices[0])).unwrap();

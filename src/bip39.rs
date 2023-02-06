@@ -40,14 +40,44 @@ use arduino_hal::{
 //     }
 // }
 
+pub fn get_mnemonic(indices: &[u16; 24]) -> [u8; 256] {
+    let mut words_as_bytes = [32u8; 256];
+    let mut j = 0;
+    for (_i, word_index) in indices.iter().enumerate() {
+        let len = get_word!(word_index).as_bytes().len();
+        words_as_bytes[j..j + len].copy_from_slice(get_word!(word_index).as_bytes());
+        j += len + 1;
+    }
+    words_as_bytes
+}
+
 pub fn print_mnnemonic(
     serial: &mut Usart<USART0, Pin<Input, PD0>, Pin<Output, PD1>, MHz16>,
-    indices: &[u16; 24],
+    mm: &[u8; 256],
 ) {
-    ufmt::uwriteln!(serial, "RECOVERY PHRASE").unwrap();
-    for (i, word_index) in indices.iter().enumerate() {
-        let w = get_word!(word_index).as_bytes();
-        ufmt::uwriteln!(serial, "{}: {}", i + 1, get_word!(word_index)).unwrap();
+    let mut word = [0u8; 16];
+    let mut word_index = 1;
+    let mut i = 0;
+    for m in mm {
+        word[i] = *m;
+        if m == &32 {
+            ufmt::uwrite!(serial, "{}: ", word_index).unwrap();
+            for w in word {
+                if w != 0 {
+                    ufmt::uwrite!(serial, "{}", w as char).unwrap();
+                }
+            }
+            ufmt::uwriteln!(serial, "").unwrap();
+            word = [0u8; 16];
+            i = 0;
+
+            if word_index == 24 {
+                break;
+            }
+
+            word_index += 1;
+        }
+        i += 1;
     }
 }
 
