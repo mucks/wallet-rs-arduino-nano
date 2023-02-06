@@ -1,7 +1,55 @@
 use avr_progmem::{progmem, string::PmString};
 
+use arduino_hal::{
+    clock::MHz16,
+    hal::{
+        port::{PD0, PD1},
+        Usart,
+    },
+    pac::USART0,
+    port::{
+        mode::{Input, Output},
+        Pin,
+    },
+};
+
 // #[link_section = ".progmem.data"]
-// pub static P_BYTE: u8 = b'A';
+// pub static WORD0_BYTES: [u8; 236] = *include_bytes!("../assets/WORDS0.txt");
+// #[link_section = ".progmem.data"]
+// pub static WORD1_BYTES: [u8; 236] = *include_bytes!("../assets/WORDS1.txt");
+// #[link_section = ".progmem.data"]
+// pub static WORD2_BYTES: [u8; 236] = *include_bytes!("../assets/WORDS2.txt");
+// #[link_section = ".progmem.data"]
+// pub static WORD3_BYTES: [u8; 236] = *include_bytes!("../assets/WORDS3.txt");
+
+// pub fn index_to_bytes(index: usize) -> &'static [u8] {
+//     match index {
+//         0 => &WORD0_BYTES,
+//         1 => &WORD1_BYTES,
+//         2 => &WORD2_BYTES,
+//         3 => &WORD3_BYTES,
+//         _ => panic!("index out of bounds"),
+//     }
+// }
+
+// pub fn index_to_word_bytes(index: usize) -> &'static [u8] {
+//     match index {
+//         0 => &WORD0_BYTES.split
+//         1 => &WORD1_BYTES,
+//         _ => panic!("index out of bounds"),
+//     }
+// }
+
+pub fn print_mnnemonic(
+    serial: &mut Usart<USART0, Pin<Input, PD0>, Pin<Output, PD1>, MHz16>,
+    indices: &[u16; 24],
+) {
+    ufmt::uwriteln!(serial, "RECOVERY PHRASE").unwrap();
+    for (i, word_index) in indices.iter().enumerate() {
+        let w = get_word!(word_index).as_bytes();
+        ufmt::uwriteln!(serial, "{}: {}", i + 1, get_word!(word_index)).unwrap();
+    }
+}
 
 macro_rules! words {
     ($($name:ident),*) => {
@@ -15,9 +63,9 @@ macro_rules! words {
 
 macro_rules! get_word {
     ($index:expr) => {{
-        let words_index = $index % 64;
+        let words_index = ($index % 64) as usize;
         let word_index = ($index % 32) as usize;
-        let words = index_to_words(words_index as usize);
+        let words = index_to_words(words_index);
         words
             .load()
             .split_whitespace()

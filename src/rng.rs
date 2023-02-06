@@ -46,25 +46,45 @@ impl<'a> Rng<'a> {
         }
     }
 
-    pub fn bytes(&mut self) -> [u8; 32] {
-        let mut rng_values: [u8; 36] = [0_u8; 36];
+    pub fn bytes<const N: usize>(&mut self) -> [u16; N] {
+        let mut rng_values = [0_u16; N];
 
-        for i in 0..6 {
+        for i in 0..N / 6 {
             let analog = self.read_analog();
             rng_values[i * 6..i * 6 + 6].copy_from_slice(&analog);
             arduino_hal::delay_ms(100);
         }
-        rng_values[0..32].try_into().unwrap()
+        rng_values[0..N].try_into().unwrap()
     }
 
-    pub fn read_analog(&mut self) -> [u8; 6] {
+    pub fn indices(&mut self) -> [u16; 24] {
+        const R: usize = 240;
+        const I: usize = 24;
+
+        let bytes: [u16; R] = self.bytes();
+        let mut indices = [0_u16; I];
+        let mut sum = 0_u16;
+
+        for i in 0..R {
+            sum += bytes[i];
+
+            if i % (R / I) == 0 {
+                indices[i / 10] = sum % 2048;
+                sum = 0;
+            }
+        }
+
+        indices
+    }
+
+    pub fn read_analog(&mut self) -> [u16; 6] {
         [
-            self.a0.analog_read(self.adc) as u8,
-            self.a1.analog_read(self.adc) as u8,
-            self.a2.analog_read(self.adc) as u8,
-            self.a3.analog_read(self.adc) as u8,
-            self.a4.analog_read(self.adc) as u8,
-            self.a5.analog_read(self.adc) as u8,
+            self.a0.analog_read(self.adc),
+            self.a1.analog_read(self.adc),
+            self.a2.analog_read(self.adc),
+            self.a3.analog_read(self.adc),
+            self.a4.analog_read(self.adc),
+            self.a5.analog_read(self.adc),
         ]
     }
 }

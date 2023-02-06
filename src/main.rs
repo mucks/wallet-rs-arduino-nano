@@ -4,7 +4,7 @@
 mod bip39;
 mod rng;
 
-use arduino_hal::Adc;
+use arduino_hal::{eeprom, Adc};
 
 use bip39::*;
 use rng::Rng;
@@ -28,6 +28,7 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
 fn main() -> ! {
     let dp = arduino_hal::Peripherals::take().unwrap();
     let mut adc = Adc::new(dp.ADC, Default::default());
+    let eeprom = eeprom::Eeprom::new(dp.EEPROM);
     let pins = arduino_hal::pins!(dp);
     let mut serial = arduino_hal::default_serial!(dp, pins, 57600);
     let mut rng = Rng::new(
@@ -36,33 +37,16 @@ fn main() -> ! {
 
     ufmt::uwriteln!(&mut serial, "Start").unwrap();
 
-    let index = 237;
+    let indices = rng.indices();
 
-    let words_index = index % 64;
-    let word_index = (index % 32) as usize;
-    let words = index_to_words(words_index as usize);
+    print_mnnemonic(&mut serial, &indices);
 
-    let word_in_memory = words.load().as_bytes();
-
-    // let word = get_word!(237).as_bytes();
-    // let word2 = get_word!(238).as_bytes();
-
-    // let x = word.get(0);
-
-    // let mut bytes: [u8; 16] = [0; 16];
-    //bytes[0..5].copy_from_slice(word);
-
-    // let word2 = get_word!(238);
-
-    // let words = [word, word2];
-
-    let t: u8 = 237;
-
-    ufmt::uwriteln!(&mut serial, "words_index: {}", get_word!(t)).unwrap();
+    for index in indices {
+        //ufmt::uwriteln!(&mut serial, "{:?}", eeprom.capacity()).unwrap();
+    }
 
     loop {
-        let bytes = rng.bytes();
-        ufmt::uwriteln!(&mut serial, "{:?}", bytes).unwrap();
+        //ufmt::uwriteln!(&mut serial, "words_index: {}", get_word!(indices[0])).unwrap();
         arduino_hal::delay_ms(100);
     }
 }
